@@ -1,0 +1,22 @@
+{
+    "payment_options": {
+         "close_window": false,
+         "notification_method": "POST",
+         "notification_url": "https://www.example.com/webhooks/payment",
+         "redirect_url": "https://www.example.com/order/success",
+         "cancel_url": "https://www.example.com/order/failed"
+    },
+    "customer": {
+         "locale": "en_US"
+    },
+    "checkout_options": {
+         "validate_cart": false
+    },
+    "days_active": 30,
+    "seconds_active": 2592000,
+    "type": "redirect",
+    "order_id": "my-order-id-1",
+    "currency": "EUR",
+    "amount": 37485,
+    "description": "Test Order Description"
+}

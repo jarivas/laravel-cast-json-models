@@ -1,0 +1,20 @@
+{
+    "name": "multisafepay/laravel-cast-json-models",
+    "version": "1.0.0",
+    "description": "A simple and direct way of casting json objects to models",
+    "type": "library",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+      {
+        "name": "Jose A Rivas",
+        "email": "jose.rivas@multisafepay.com"
+      }
+    ],
+    "autoload": {
+      "psr-4": {
+        "CastModels\\": "src/"
+      }
+    },
+    "config": {
+    }
+}
