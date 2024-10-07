@@ -16,7 +16,7 @@ abstract class Model implements JsonSerializable
 
     /**
      * @param array<array<string, mixed>>|string $data
-     * @return static[]
+     * @return Collection<int, static>
      * */
     public static function collection(array|string $data): Collection
     {
