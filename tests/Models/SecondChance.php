@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Models;
+namespace CastModels\Tests\Models;
 
 use CastModels\Model;
 

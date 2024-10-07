@@ -1,14 +1,13 @@
 <?php
 
-namespace Tests\Feature;
+namespace CastModels\Tests;
 
-use Tests\Feature\Models\PaymentOptions;
-use Tests\Feature\Models\Customer;
-use Tests\Feature\Models\CheckoutOptions;
-use Tests\Feature\Models\Order;
-use Tests\TestCase;
+use CastModels\Tests\Models\PaymentOptions;
+use CastModels\Tests\Models\Customer;
+use CastModels\Tests\Models\CheckoutOptions;
+use CastModels\Tests\Models\Order;
 
-class OrderTest extends TestCase
+class OrderTest extends \Orchestra\Testbench\TestCase
 {
     public function testPaymentOptions()
     {

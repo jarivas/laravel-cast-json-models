@@ -1,5 +1,5 @@
 {
-    "name": "multisafepay/laravel-cast-json-models",
+    "name": "jarivas/laravel-cast-json-models",
     "version": "1.0.0",
     "description": "A simple and direct way of casting json objects to models",
     "type": "library",
@@ -15,6 +15,14 @@
         "CastModels\\": "src/"
       }
     },
+    "autoload-dev": {
+      "psr-4": {
+        "CastModels\\Tests\\": "tests/"
+      }
+    },
     "config": {
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.5"
     }
 }

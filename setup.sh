@@ -1,20 +1,14 @@
 composer install
 
-rm -rf laravel
+if [ -f .git/hooks/pre-commit ]
+then
+  rm .git/hooks/pre-commit
+fi
 
-composer create-project laravel/laravel laravel
+cp pre-commit-hook .git/hooks/pre-commit
 
-rm laravel/tests/Feature/ExampleTest.php
-rm laravel/tests/Unit/ExampleTest.php
+chmod +x .git/hooks/pre-commit
 
-cp -r tests/* laravel/tests/Feature
-
-php setup.php
-
-cd laravel
-
-composer update
-
-php artisan test
+./vendor/bin/phpunit
 
 sleep infinity
