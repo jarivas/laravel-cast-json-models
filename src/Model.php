@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 namespace CastModels;
 
+use Illuminate\Support\Collection;
+use ReflectionNamedType;
 use ReflectionProperty;
 use JsonSerializable;
 use stdClass;
-use ReflectionNamedType;
 
 abstract class Model implements JsonSerializable
 {
-
+    
 
     /**
      * @param array<array<string, mixed>>|string $data
      * @return static[]
      * */
-    public static function collection(array|string $data): array
+    public static function collection(array|string $data): Collection
     {
-        $collection = [];
+        $collection = collect();
 
         if (empty($data)) {
             return $collection;
@@ -29,9 +30,13 @@ abstract class Model implements JsonSerializable
             $data = json_decode($data, true);
         }
 
-        // @phpstan-ignore-next-line
-        return array_map(fn($item) => new static($item), $data);
+        foreach ($data as $item) {
+            if (! empty($item)) {
+                $collection->add(new static($item));
+            }
+        }
 
+        return $collection;
     }//end collection()
 
 
