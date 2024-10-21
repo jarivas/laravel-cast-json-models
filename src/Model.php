@@ -12,7 +12,7 @@ use stdClass;
 
 abstract class Model implements JsonSerializable
 {
-    
+
 
     /**
      * @param array<array<string, mixed>>|string $data
@@ -31,7 +31,8 @@ abstract class Model implements JsonSerializable
         }
 
         foreach ($data as $item) {
-            if (! empty($item)) {
+            if (!empty($item)) {
+                // @phpstan-ignore-next-line
                 $collection->add(new static($item));
             }
         }
@@ -41,7 +42,7 @@ abstract class Model implements JsonSerializable
 
 
     /** @param array<string, mixed>|stdClass $data */
-    public function __construct(array|stdClass $data=[])
+    public function __construct(array|stdClass $data = [])
     {
         $this->update($data);
 
@@ -49,7 +50,7 @@ abstract class Model implements JsonSerializable
 
 
     /** @param array<string, mixed>|stdClass $data */
-    public function update(array|stdClass $data=[]): void
+    public function update(array|stdClass $data = []): void
     {
         if (empty($data)) {
             return;
@@ -99,11 +100,58 @@ abstract class Model implements JsonSerializable
 
     }//end __toString()
 
+    /**
+     * Cast the given value.
+     *
+     * @param \Illuminate\Database\Eloquent\Model|null $model
+     * @param string $key
+     * @param mixed $value
+     * @param array<string, mixed>  $attributes
+     * @return array|static|Collection|null
+     */
+    public function get($model, $key, $value, $attributes): mixed
+    {
+        if (empty($value) || $value == 'null') {
+            return null;
+        }
+
+        $newValue = json_decode($value);
+
+        if (is_object($newValue)) {
+            // @phpstan-ignore-next-line
+            return new static($newValue);
+        }
+
+        return static::collection($newValue);
+    }
+
+    /**
+     * Prepare the given value for storage.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @param string $key
+     * @param mixed $value
+     * @param array<string, mixed>  $attributes
+     * @return mixed
+     */
+    public function set($model, $key, $value, $attributes): mixed
+    {
+        if (empty($value) || $value == 'null') {
+            return null;
+        }
+
+        if (is_string($value)) {
+            return $value;
+        }
+
+        return $this->__toString();
+    }
+
 
     private static function setProperty(Model $instance, string $propertyName, mixed $value): void
     {
         $rProperty = new ReflectionProperty($instance, $propertyName);
-        $rType     = $rProperty->getType();
+        $rType = $rProperty->getType();
 
         if (empty($rType) || !$rType instanceof ReflectionNamedType) {
             return;
