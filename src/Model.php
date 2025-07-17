@@ -144,7 +144,7 @@ abstract class Model implements JsonSerializable
             return $value;
         }
 
-        return $this->__toString();
+        return $value->__toString();
     }
 
 
