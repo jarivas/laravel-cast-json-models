@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace CastModels;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use ReflectionNamedType;
 use ReflectionProperty;
 use JsonSerializable;
 use stdClass;
 
-abstract class Model implements JsonSerializable
+abstract class Model implements JsonSerializable, Arrayable
 {
 
 
@@ -140,7 +141,7 @@ abstract class Model implements JsonSerializable
             return null;
         }
 
-        if (is_string($value)) {
+        if (is_string($value) || is_array($value)) {
             return $value;
         }
 
