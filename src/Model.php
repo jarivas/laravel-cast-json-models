@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace CastModels;
-
+use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Collection;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -115,6 +115,10 @@ abstract class Model implements JsonSerializable
             return null;
         }
 
+        if (is_object($value)) {
+            return $value;
+        }
+
         $newValue = json_decode($value);
 
         if (is_object($newValue)) {
@@ -142,6 +146,10 @@ abstract class Model implements JsonSerializable
 
         if (is_string($value)) {
             return $value;
+        }
+
+        if (is_array($value)) {
+            return json_encode($value);
         }
 
         return $value->__toString();
@@ -199,7 +207,7 @@ abstract class Model implements JsonSerializable
 
         $className = self::getClassNameFromPhpDoc($phpDoc);
 
-        if (is_bool($className)) {
+        if (empty($className)) {
             $instance->$propertyName = $value;
             return;
         }
@@ -282,8 +290,20 @@ abstract class Model implements JsonSerializable
         }
 
         return array_map(fn($item) => self::toArrayHelper($item), $value);
-
     }//end toArrayHelperArray()
 
+    /**
+     * Get the serialized representation of the value.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function serialize(
+        EloquentModel $model,
+        string $key,
+        mixed $value,
+        array $attributes,
+    ): mixed {
+        return $value->toArray();
+    }
 
 }//end class
