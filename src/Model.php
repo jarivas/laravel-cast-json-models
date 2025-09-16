@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace CastModels;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use ReflectionNamedType;
 use ReflectionProperty;
 use JsonSerializable;
 use stdClass;
 
-abstract class Model implements JsonSerializable
+abstract class Model implements JsonSerializable, Arrayable
 {
 
 
