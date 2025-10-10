@@ -388,7 +388,7 @@ abstract class Model implements JsonSerializable, Arrayable
             return $value;
         }
 
-        if ($value instanceof Model) {
+        if ($value instanceof Arrayable) {
             return $value->toArray();
         }
 
