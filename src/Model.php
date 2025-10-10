@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use ReflectionNamedType;
+use ReflectionUnionType;
 use ReflectionProperty;
 use JsonSerializable;
 use stdClass;
@@ -157,20 +158,49 @@ abstract class Model implements JsonSerializable, Arrayable
     }
 
 
-    private static function setProperty(Model $instance, string $propertyName, mixed $value): void
-    {
+    private static function setProperty(
+        Model $instance,
+        string $propertyName,
+        mixed $value
+    ): void {
         $rProperty = new ReflectionProperty($instance, $propertyName);
         $rType = $rProperty->getType();
-        $className = $rType->getName();
 
-        if (empty($rType) || !$rType instanceof ReflectionNamedType) {
+        if (empty($rType)) {
             return;
         }
 
+        $rType instanceof ReflectionNamedType ? 
+            self::setPropertyNamedType(
+            $instance,
+                $rProperty,
+                $rType,
+                $propertyName,
+                $value
+            )
+            : self::setPropertyUnionType(
+            $instance,
+                $rProperty,
+                $rType,
+                $propertyName,
+                $value
+            );
+
+    }//end setProperty()
+
+    private static function setPropertyNamedType(
+        Model $instance,
+        ReflectionProperty $rProperty,
+        ReflectionNamedType $rType,
+        string $propertyName,
+        mixed $value
+    ): void {
         if ($rType->isBuiltin()) {
-            self::setPropertyBuiltIn($instance, $rProperty, $propertyName, $value);
+            self::setPropertyBuiltIn($instance, $propertyName, $value);
             return;
         }
+
+        $className = $rType->getName();
 
         if ($className === Collection::class) {
             self::setCollection($instance, $rProperty, $propertyName, $value);
@@ -178,12 +208,90 @@ abstract class Model implements JsonSerializable, Arrayable
         }
 
         self::setPropertyHelper($instance, $className, $propertyName, $value);
+    }//end setPropertyNamedType()
 
-    }//end setProperty()
+    private static function setPropertyUnionType(
+        Model $instance,
+        ReflectionProperty $rProperty,
+        ReflectionUnionType $rType,
+        string $propertyName,
+        mixed $value
+    ): void {
+        $types = $rType->getTypes();
+        $max = count($types);
+        $i = 0;
+        $dataStructure = [];
+        $valueStructure = array_keys($value);
+
+        do
+        {
+            self::setUnionTypeDifferences(
+                $types[$i],
+                $rProperty,
+                $value,
+                $dataStructure,
+                $valueStructure
+            );
+        } while (++$i < $max);
+
+        if (empty($dataStructure['type'])) {
+            return;
+        }
+
+        self::setPropertyNamedType(
+            $instance,
+            $rProperty,
+            $dataStructure['type'],
+            $propertyName,
+            $value
+        );
+
+    }//end setPropertyUnionType()
+
+    private static function setUnionTypeDifferences(
+        ReflectionNamedType $type,
+        ReflectionProperty $rProperty,
+        mixed $value,
+        array &$dataStructure,
+        array $valueStructure
+    ): void {
+        $className = $type->getName();
+        $isCollection = $className === Collection::class;
+
+        if (!class_exists($className)
+            || ($isCollection && !is_numeric(array_key_first($value)))) {
+            return;
+        }
+
+        if ($isCollection) {
+            $className2 = self::getCollectionClassName($rProperty);
+
+            if (!class_exists($className2)) {
+                return;
+            }
+
+            $dataStructure['type'] = $type;
+            $dataStructure['diff'] = 0;
+            return;
+        }
+
+        $classStructure = array_keys(get_class_vars($className));
+        $diff = count(array_diff($classStructure, $valueStructure));
+
+        if (empty($dataStructure['type'])
+            || $dataStructure['diff'] > $diff) {
+            $dataStructure['type'] = $type;
+            $dataStructure['diff'] = $diff;
+        }
+
+    }//end getUnionTypeDifferences()
 
 
-    private static function setPropertyBuiltIn(Model $instance, ReflectionProperty $rProperty, string $propertyName, mixed $value): void
-    {
+    private static function setPropertyBuiltIn(
+        Model $instance,
+        string $propertyName,
+        mixed $value
+    ): void {
         if (is_object($value)) {
             $value = (array) $value;
         }
@@ -193,20 +301,17 @@ abstract class Model implements JsonSerializable, Arrayable
     }//end setPropertyBuiltIn()
 
 
-    private static function setCollection(Model $instance, ReflectionProperty $rProperty, string $propertyName, mixed $value): void
-    {
+    private static function setCollection(
+        Model $instance,
+        ReflectionProperty $rProperty,
+        string $propertyName,
+        mixed $value
+    ): void {
         if (empty($value)) {
             return;
         }
 
-        $phpDoc = $rProperty->getDocComment();
-
-        if (!$phpDoc) {
-            $instance->$propertyName = $value;
-            return;
-        }
-
-        $className = self::getClassNameFromPhpDoc($phpDoc);
+        $className = self::getCollectionClassName($rProperty);
 
         if (empty($className)) {
             $instance->$propertyName = $value;
@@ -221,9 +326,23 @@ abstract class Model implements JsonSerializable, Arrayable
 
     }//end setArray()
 
+    private static function getCollectionClassName(
+        ReflectionProperty $rProperty
+    ): string|false {
+        $phpDoc = $rProperty->getDocComment();
 
-    private static function getClassNameFromPhpDoc(string $phpDoc): string|false
-    {
+        if (!$phpDoc) {
+            return false;
+        }
+
+        return self::getClassNameFromPhpDoc($phpDoc);
+
+    }//end getCollectionClassName()
+
+
+    private static function getClassNameFromPhpDoc(
+        string $phpDoc
+    ): string|false {
         $pattern = '/<\s*(\\\\?[A-Za-z_\\\\][A-Za-z0-9_\\\\]*)\s*>/m';
         $matches = [];
 
@@ -234,8 +353,12 @@ abstract class Model implements JsonSerializable, Arrayable
     }//end getClassNameFromPhpDoc()
 
 
-    private static function setPropertyHelper(Model $instance, string $type, string $propertyName, mixed $value): void
-    {
+    private static function setPropertyHelper(
+        Model $instance,
+        string $type,
+        string $propertyName,
+        mixed $value
+    ): void {
         if (method_exists($type, 'tryFrom')) {
             $instance->$propertyName = $type::tryFrom($value);
             return;
@@ -290,7 +413,8 @@ abstract class Model implements JsonSerializable, Arrayable
             return $result;
         }
 
-        return array_map(fn($item) => self::toArrayHelper($item), $value);
+        return array_map(fn($item) =>
+            self::toArrayHelper($item), $value);
     }//end toArrayHelperArray()
 
     /**

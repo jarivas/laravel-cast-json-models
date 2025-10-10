@@ -110,3 +110,30 @@ class Example extends Model
 }
 
 ```
+
+Support union types Models, when built in types use mixed as type,
+only use union when you can not combine both models in one, like in this case
+
+```php
+<?php
+
+namespace Tests\Models;
+
+use App\Casts\NextDate;
+use Illuminate\Support\Collection;
+use CastModels\Model;
+
+class SearchAvailability extends Model
+{
+    public string $start;
+
+    public int|null $idResource = null;
+
+    public int|null $idResourceType = null;
+
+    /** @var Collection<\App\Casts\Availability> */
+    public Collection|NextDate $availability;
+}
+
+
+```
