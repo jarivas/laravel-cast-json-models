@@ -370,6 +370,8 @@ abstract class Model implements JsonSerializable, Arrayable
             $instance->$propertyName = new $type($value);
         }
 
+        $instance->$propertyName = $value;
+
     }//end setPropertyHelper()
 
 
