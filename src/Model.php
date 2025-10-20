@@ -10,6 +10,7 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use ReflectionProperty;
 use JsonSerializable;
+use PhpParser\Node\Expr\AssignOp\Mod;
 use stdClass;
 
 abstract class Model implements JsonSerializable, Arrayable
@@ -364,10 +365,9 @@ abstract class Model implements JsonSerializable, Arrayable
             return;
         }
 
-        $type = new $type();
-
-        if ($type instanceof Model) {
+        if (is_subclass_of($type, Model::class)) {
             $instance->$propertyName = new $type($value);
+            return;
         }
 
         $instance->$propertyName = $value;
