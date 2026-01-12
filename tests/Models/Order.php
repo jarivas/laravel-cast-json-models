@@ -20,7 +20,7 @@ class Order extends Model
     public Delivery $delivery;
     public CheckoutOptions $checkout_options;
     public ShoppingCart $shopping_cart;
-    /** \Tests\Feature\Model\CustomField */
+    /** @var Collection<\Tests\Feature\Model\CustomField> */
     public Collection $custom_fields;
     public Affiliate $affiliate;
     public SecondChance $second_chance;
